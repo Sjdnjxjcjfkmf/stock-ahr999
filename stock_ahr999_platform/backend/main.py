@@ -10,7 +10,7 @@ import pandas as pd
 import yfinance as yf
 
 BASE = Path(__file__).resolve().parent.parent
-DB = BASE / "stock_ahr999.db"
+DB = Path("/tmp/stock_ahr999.db")
 app = FastAPI(title="Stock AHR999 API", version="0.1.0")
 app.mount("/static", StaticFiles(directory=BASE/"frontend"), name="static")
 
