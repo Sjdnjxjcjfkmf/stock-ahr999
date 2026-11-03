@@ -1,0 +1,14 @@
+[project]
+name = "stock-ahr999"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "yfinance",
+    "pandas",
+    "numpy",
+]
+
+[tool.vercel]
+entrypoint = "backend.main:app"
