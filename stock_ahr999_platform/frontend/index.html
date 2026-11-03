@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stock AHR999 | 自动化价值发现</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#182230;--muted:#697586;--line:#e5e9ef;--blue:#2856d8;--green:#13845d;--red:#c24a4a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:30px 22px 60px}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px}
+.kicker{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:2px}.title{font-size:29px;font-weight:760;letter-spacing:-1px;margin:4px 0}.sub{color:var(--muted);max-width:700px}.status{font-size:11px;color:var(--muted);border:1px solid var(--line);background:#fff;border-radius:30px;padding:7px 11px}
+.search{display:flex;gap:9px;margin:20px 0 15px}.search input{max-width:300px}input{border:1px solid #d9dee7;border-radius:9px;padding:11px 12px;font:inherit;min-width:0}
+button{border:0;border-radius:9px;background:var(--blue);color:#fff;padding:10px 16px;font-weight:700;cursor:pointer}button.alt{background:#eaf0ff;color:#244bb8}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:17px}.pill{border:1px solid var(--line);border-radius:20px;padding:5px 10px;background:white;color:#536071;cursor:pointer;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px;box-shadow:0 2px 12px #17203306}
+.card h2{font-size:14px;margin:0 0 13px}.label{font-size:11px;color:var(--muted)}.value{font-size:26px;font-weight:760;letter-spacing:-.8px;margin:4px 0}.small{font-size:11px;color:var(--muted)}
+.hero{background:#eff4ff;border-color:#dce6ff}.hero .value{font-size:34px;color:var(--blue)}
+.wide{grid-column:span 2}.full{grid-column:1/-1}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.chart{width:100%;height:245px;display:block}.table{width:100%;border-collapse:collapse;font-size:12px}.table td,.table th{padding:9px 5px;border-bottom:1px solid var(--line);text-align:left}.table th{color:var(--muted);font-weight:600}
+.notice{padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fafbfd;color:#586476;font-size:12px;margin-top:12px}
+.notice.warn{border-color:#f0dfba;background:#fffbf1;color:#78591d}.green{color:var(--green)}.red{color:var(--red)}
+.loader{color:var(--muted);padding:18px 0}.hidden{display:none}.footer{color:var(--muted);font-size:11px;margin-top:18px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.wide{grid-column:span 2}}
+@media(max-width:520px){.wrap{padding:20px 12px}.head{display:block}.status{display:inline-block;margin-top:10px}.grid{gap:9px}.card{padding:13px}.value{font-size:22px}.hero .value{font-size:29px}.search input{width:55%}.wide{grid-column:span 2}}
+</style></head>
+<body><div class="wrap">
+<header class="head"><div><div class="kicker">AUTOMATED EQUITY VALUATION / 0.1</div><div class="title">Stock AHR999</div>
+<div class="sub">双锚估值：投资者成本 × 企业内在价值。自动获取美股数据，识别价格与长期价值之间的偏离。</div></div><div class="status" id="status">● 等待查询</div></header>
+<div class="search"><input id="ticker" value="AAPL" placeholder="输入美股代码，例如 NVDA"><button id="go">分析股票</button><button class="alt" id="demo">演示数据</button></div>
+<div class="pills" id="suggestions"></div>
+<div id="loading" class="loader">输入股票代码开始分析。</div>
+<div id="dashboard" class="hidden">
+<div class="row" style="margin:4px 0 12px"><div><b id="company">—</b><div class="small" id="meta">—</div></div><div class="small" id="updated">—</div></div>
+<div class="grid">
+ <div class="card hero"><div class="label">Stock AHR999 · 质量调整后</div><div class="value" id="ahr">—</div><div class="small" id="zone">—</div></div>
+ <div class="card"><div class="label">当前股价</div><div class="value" id="price">—</div><div class="small">最新可用日线收盘价</div></div>
+ <div class="card"><div class="label">200日等额定投成本</div><div class="value" id="cost">—</div><div class="small">调和平均价格</div></div>
+ <div class="card"><div class="label">DCF内在价值 / 股</div><div class="value" id="intrinsic">—</div><div class="small" id="fcf">—</div></div>
+ <div class="card wide"><h2>价格与估值锚</h2><svg id="chart" class="chart" viewBox="0 0 700 245" preserveAspectRatio="none"></svg><div class="small">历史价格、200日成本线、当前DCF价值线。DCF线仅为当前假设下的参考值。</div></div>
+ <div class="card wide"><h2>模型拆解</h2><table class="table"><tbody>
+ <tr><td>价格 / 200日成本</td><td id="pc">—</td><td>投资者成本偏离</td></tr>
+ <tr><td>价格 / DCF价值</td><td id="pv">—</td><td>内在价值偏离</td></tr>
+ <tr><td>基本面质量评分</td><td id="quality">—</td><td>规则化初步评分，不是评级</td></tr>
+ <tr><td>现金流增长假设</td><td id="growth">—</td><td>基于历史现金流，设有上下限</td></tr>
+ <tr><td>折现率 / 永续增长率</td><td>10% / 3%</td><td>第一版固定假设</td></tr>
+ </tbody></table></div>
+ <div class="card full"><h2>自动分析与数据质量</h2><div id="warnings" class="small">—</div><div class="notice">模型纪律：没有可用的正自由现金流/股数时，不输出伪造的DCF估值。所有增长率、质量评分均为模型估计，需在后续版本增加行业适配与敏感性分析。</div></div>
+ <div class="card full"><h2>最近估值记录</h2><div id="snapshots" class="small">首次分析后生成记录。</div></div>
+</div></div>
+<div class="footer">Stock AHR999 Prototype · 数据可能延迟或缺失，不构成投资建议。行情来源与财务数据口径需在生产版进一步验证。</div>
+</div>
+<script>
+const $=id=>document.getElementById(id), money=(x,c='USD')=>x==null?'不可用':new Intl.NumberFormat('en-US',{style:'currency',currency:c,maximumFractionDigits:2}).format(x);
+function draw(data){
+ const s=data.price_history||[],svg=$('chart');if(!s.length){svg.innerHTML='';return}
+ const vals=s.map(x=>x.close).concat([data.cost_200d,data.intrinsic_value].filter(x=>x>0));
+ let lo=Math.min(...vals)*.92,hi=Math.max(...vals)*1.08,W=700,H=245,L=48,R=15,T=15,B=25;
+ const X=i=>L+i/Math.max(1,s.length-1)*(W-L-R),Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+ const path=s.map((d,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(d.close).toFixed(1)).join(' ');
+ let guides=[['#bd8b2d',data.cost_200d,'200日成本'],['#16845d',data.intrinsic_value,'DCF价值']].filter(x=>x[1]>0).map(([color,v,label])=>`<line x1="${L}" y1="${Y(v)}" x2="${W-R}" y2="${Y(v)}" stroke="${color}" stroke-dasharray="6 5" stroke-width="2"/><text x="${W-R-4}" y="${Y(v)-6}" text-anchor="end" fill="${color}" font-size="11">${label} ${v.toFixed(1)}</text>`).join('');
+ svg.innerHTML=`<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#e2e6ec"/><path d="${path}" fill="none" stroke="#2856d8" stroke-width="2.2"/>${guides}<text x="4" y="16" fill="#87909d" font-size="10">${hi.toFixed(1)}</text><text x="4" y="${H-B}" fill="#87909d" font-size="10">${lo.toFixed(1)}</text><text x="${L}" y="${H-5}" fill="#87909d" font-size="10">${s[0].date}</text><text x="${W-R}" y="${H-5}" text-anchor="end" fill="#87909d" font-size="10">${s[s.length-1].date}</text>`;
+}
+function render(d){
+ $('dashboard').classList.remove('hidden');$('loading').classList.add('hidden');
+ const c=d.currency||'USD';$('company').textContent=d.company_name+' ('+d.ticker+')';
+ $('meta').textContent=d.valuation_status==='DEMO'?'模拟数据 · 不代表真实市场':'数据模式：自动获取 · '+c;
+ $('updated').textContent='更新于 '+new Date(d.updated_at).toLocaleString();
+ $('ahr').textContent=d.ahr999==null?'不可计算':d.ahr999.toFixed(3);
+ let z=d.ahr999==null?'DCF数据不足':d.ahr999<.5?'双锚显著偏低':d.ahr999<1?'相对偏低':d.ahr999<2?'中性区间':'相对偏高';$('zone').textContent=z;
+ $('price').textContent=money(d.price,c);$('cost').textContent=money(d.cost_200d,c);$('intrinsic').textContent=money(d.intrinsic_value,c);
+ $('fcf').textContent=d.fcf_per_share==null?'缺少可用FCF/股数据':'FCF/股 '+money(d.fcf_per_share,c);
+ $('pc').textContent=d.pc==null?'—':d.pc.toFixed(3);$('pv').textContent=d.pv==null?'—':d.pv.toFixed(3);
+ $('quality').textContent=d.quality_score+' · '+d.quality_method;$('growth').textContent=(d.growth_assumption*100).toFixed(1)+'%';
+ $('warnings').innerHTML=(d.warnings||[]).length?(d.warnings||[]).map(x=>'• '+x).join('<br>'):'未发现显著数据警告。';
+ draw(d);loadHistory(d.ticker);
+}
+async function analyze(demo=false){
+ let t=$('ticker').value.trim().toUpperCase();if(!t)return;
+ $('loading').classList.remove('hidden');$('dashboard').classList.add('hidden');$('loading').textContent='正在获取行情与财报并计算估值…';$('status').textContent='● 正在分析';
+ try{let r=await fetch(`/api/analyze/${encodeURIComponent(t)}${demo?'?demo=true':''}`);let j=await r.json();if(!r.ok)throw new Error(j.detail||'请求失败');render(j);$('status').textContent=j.valuation_status==='DEMO'?'● 演示模式':'● 已完成';}
+ catch(e){$('loading').textContent='分析失败：'+e.message;$('status').textContent='● 数据获取失败';}
+}
+async function loadHistory(t){try{let r=await fetch('/api/history/'+t),a=await r.json();$('snapshots').textContent=a.slice(0,8).map(x=>new Date(x.created_at).toLocaleString()+' · AHR '+(x.data.ahr999==null?'N/A':x.data.ahr999.toFixed(3))).join('　 |　 ')||'暂无记录';}catch{}}
+$('go').onclick=()=>analyze(false);$('demo').onclick=()=>analyze(true);$('ticker').addEventListener('keydown',e=>{if(e.key==='Enter')analyze(false)});
+fetch('/api/universe').then(r=>r.json()).then(x=>{$('suggestions').innerHTML=x.suggested.map(t=>`<span class="pill" data-t="${t}">${t}</span>`).join('');document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>{$('ticker').value=p.dataset.t;analyze(false)})});
+</script></body></html>
